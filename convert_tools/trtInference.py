@@ -104,7 +104,7 @@ img_resized = np.expand_dims(img_resized, axis=0)
 
 
 inputs[0].host = np.ascontiguousarray(img_resized)
-trt_outputs = do_inference_v2(context=context,
+trt_outputs = do_inference(context=context,
                                 bindings=bindings,
                                 inputs=inputs,
                                 outputs=outputs,
