@@ -292,9 +292,9 @@ _COLORS = np.array(
 
 
 if __name__=='__main__':
-    onnx_model = '/home/shaoran/github_source/Dec/YOLOX/onnx_model/layout/yolox_l_layout.onnx'
-    demo_image = '/home/shaoran/datasets/starsee/layout/VocCocoFormat/JPEGImages_test/006011.jpg'
-    visual_dir = '/home/shaoran/github_source/Dec/YOLOX/visual_results'
+    onnx_model = 'yolox_l_layout.onnx'
+    demo_image = '006011.jpg'
+    visual_dir = 'visual_results'
 
     input_size = (960, 960)
 
