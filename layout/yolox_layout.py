@@ -200,6 +200,8 @@ class YoloxInference():
             return None
 
         if visual_save is not None:
+            if not os.path.exists(visual_save):
+                os.makedirs(visual_save)
             cv2.imwrite(os.path.join(visual_save, os.path.basename(img_path)), res[0])
 
         return res[1:]
