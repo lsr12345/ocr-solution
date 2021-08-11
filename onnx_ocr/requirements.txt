@@ -1,0 +1,9 @@
+flask
+opencv-python
+requests
+pillow
+easydict
+onnxruntime
+shapely
+pyclipper
+gunicorn
