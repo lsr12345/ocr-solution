@@ -1,0 +1,34 @@
+inference:
+  type: 'tensorrt'
+
+  use_layout: True
+  use_formula: False
+  use_table_struct: False
+  use_angle_cls: True
+  use_pic_angle_cls: False
+
+  input_size: (960,960)
+  drop_score: 0.5
+
+file_path:
+  crnn_chars: '/data/company_work/starsee/ocr_solution/config/chars_v1_p.txt'
+
+model_path:
+  det: '/data/company_work/starsee/ocr_solution/models_docker/det_inference_free_dim.trt'
+  rec: '/data/company_work/starsee/ocr_solution/models_docker/rec_inference_free_dim_b2.trt'
+  layout: '/data/company_work/starsee/ocr_solution/models_docker/yolox_l_layout.trt'
+  angle_cls: '/data/company_work/starsee/ocr_solution/models_docker/angle_cls.trt'
+
+visual_save:
+  visual_flag: False
+  crop_flag: False
+  visual_path: '/data/company_work/starsee/ocr_solution/visual_results'
+
+crnn:
+  inference_batch: 2
+  beamserach: False
+
+angle_cls:
+  inference_batch: 1
+  input_size: (720,720)
+  angel_label_list: ['0', '90', '180', '270']

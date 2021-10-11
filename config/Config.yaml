@@ -1,0 +1,34 @@
+inference:
+  type: 'onnx'
+
+  use_layout: True
+  use_formula: False
+  use_table_struct: False
+  use_angle_cls: True
+  use_pic_angle_cls: False
+
+  input_size: (960,960)
+  drop_score: 0.5
+
+file_path:
+  crnn_chars: '/home/shaoran/company_work/starsee/ocr_solution/config/chars_v1_p.txt'
+
+model_path:
+  det: '/home/shaoran/company_work/starsee/ocr_solution/models/det_inference_free_dim.onnx'
+  rec: '/home/shaoran/company_work/starsee/ocr_solution/models/rec_inference_free_dim.onnx'
+  layout: '/home/shaoran/company_work/starsee/ocr_solution/models/yolox_l_layout.onnx'
+  angle_cls: '/home/shaoran/company_work/starsee/ocr_solution/models/angle_cls.onnx'
+
+visual_save:
+  visual_flag: True
+  crop_flag: False
+  visual_path: '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
+
+crnn:
+  inference_batch: 2
+  beamserach: False
+
+angle_cls:
+  inference_batch: 2
+  input_size: (720,720)
+  angel_label_list: ['0', '90', '180', '270']
