@@ -238,7 +238,7 @@ def postprocess( boxes, rec_res, analysis, img, angle, type_list = ['text', 'tit
                 (lout['layout'] in ['text', 'title'] and len(lout['layout_idx']) == 0) or (
                     lout['layout'] == 'table' and len(lout['layout_idx']) < 3))]
 
-    logger.info("总耗时: %.3fs" % (time.time() - start_time))
+    logger.info("后处理耗时: %.3fs" % (time.time() - start_time))
 
     result = {
         "results_num": len(boxes),
