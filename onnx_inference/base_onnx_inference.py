@@ -101,6 +101,8 @@ class TextSystem(object):
             stop = time.time()
             logger.info('小角度角度检测耗时: {}'.format(stop-start))
             logger.info("Tiny angle : {}".format(angle))
+        else:
+            angle = 0
 
         # 版面分析
         th = MyThread(self.loyout_detector.inference, args=([img_angle, self.config['visual_save']['visual_path'], 'layout_'+visual_name]))

@@ -14,6 +14,7 @@ example:
 import cv2
 import time
 import os
+import math
 
 import numpy as np
 import tensorrt as trt
@@ -112,8 +113,11 @@ class CrnnInference_trt():
 
         scale = h / 32
         w_ = w / scale
-        w_ = int(w_/32)*32
-
+        w_ = math.ceil(w_/32)*32
+        if w_ > 1024:
+            print(w_)
+            w_ = 1024
+            print('long')
         img = cv2.resize(img, (w_, 32))
         img = img.astype('float32')
         img = img.transpose((2, 0, 1)) / 255
