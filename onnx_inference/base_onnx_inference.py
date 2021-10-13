@@ -119,12 +119,17 @@ class TextSystem(object):
         img_crop_list = []
 
         dt_boxes = sorted_boxes(dt_boxes)
-
+        width_list = []
         for bno in range(len(dt_boxes)):
             tmp_box = copy.deepcopy(dt_boxes[bno])
             tmp_box = tmp_box.astype(np.float32)
             img_crop = get_rotate_crop_image(img_angle, tmp_box)
             img_crop_list.append(img_crop)
+            width_list.append(img_crop.shape[1] / float(img_crop.shape[0]))
+            
+        indices = np.argsort(np.array(width_list))
+        # print(indices)
+        img_crop_list = [img_crop_list[ind] for ind in indices]
 
         # # crnn total batch inference
         # start = time.time()
@@ -148,13 +153,20 @@ class TextSystem(object):
         for i, img_ in enumerate(img_crop_list):
             small_batch.append(img_)
             if len(small_batch) == int(self.config['crnn']['inference_batch']) or i == len(img_crop_list)-1:
-                try:
-                    rec_small = self.text_recognizer.inference_batch(small_batch)
-                    small_batch = []
-                    for rec_ in rec_small:
-                        rec_res.append(rec_)
-                except:
-                    small_batch = []
+                # try:
+                rec_small = self.text_recognizer.inference_batch(small_batch)
+                small_batch = []
+                for rec_ in rec_small:
+                    rec_res.append(rec_)
+                # except:
+                #     small_batch = []
+
+        rec_res_ = [0] * len(indices)
+        for i,j in enumerate(indices):
+            rec_res_[j] = rec_res[i]
+            
+        rec_res = rec_res_   
+
         stop = time.time()
         logger.info('文字识别耗时: {}'.format(stop-start))
 
@@ -180,6 +192,20 @@ class TextSystem(object):
             analysis_re.append(tmp_ar)
 
         return filter_boxes, filter_rec_res, analysis_re, img_angle, angle   # , angle_label_index
+
+    def warm(self):
+        logger.info("Warming...... Please Wait")
+        for _ in range(5):
+            for i in range(32):
+                warm_rec_data = np.zeros((32, (i+1)*32, 3), dtype=np.uint8)
+                _ = self.text_recognizer.inference_batch([warm_rec_data]*2)
+
+            warm_det_data = np.zeros((960,960, 3), dtype=np.uint8)
+            _ = self.text_detector.inference(warm_det_data, visual_save=None)
+
+            warm_layout_data = np.zeros((960,960, 3), dtype=np.uint8)
+            _ = self.loyout_detector.inference(warm_layout_data, visual_save=None)
+        logger.info("Warm Done")
 
 def postprocess( boxes, rec_res, analysis, img, angle, type_list = ['text', 'title', 'formula', 'table', 'figure']):
     start_time = time.time()
@@ -253,28 +279,9 @@ def postprocess( boxes, rec_res, analysis, img, angle, type_list = ['text', 'tit
 if __name__=='__main__':
 
     text_sys = TextSystem(cfg)
-    
-    '''
-    image = cv2.imread('/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/2.jpg')
-    for _ in range(10):
-        _, _, _, _ = text_sys.run(image)
+    text_sys.warm()
 
-    start = time.time()
-    for _ in range(50):
-        filter_boxes, filter_rec_res, analysis, img_angle = text_sys.run(image)
-    stop = time.time()
-    print('per image spend time: ', (stop-start)/50)
-    fps = 50/(stop-start)
-    print('fps: ', fps)
-    print(filter_rec_res)
-    '''
     root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/ocr_zp'
-    # image = cv2.imread('/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/rotated_16_add_v1_0000004R.jpg')
-    # _, _, _, _, _ = text_sys.run(image)
-
-    # for _ in range(10):
-    #     _, _, _, _, _ = text_sys.run(image)
-    
     start = time.time()
     for path in os.listdir(root_dir):
         image = cv2.imread(os.path.join(root_dir, path))
@@ -285,4 +292,5 @@ if __name__=='__main__':
     fps = len(os.listdir(root_dir))/(stop-start)
     print('fps: ', fps)
     # print(filter_rec_res)
-    
+
+

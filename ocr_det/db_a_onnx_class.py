@@ -493,6 +493,7 @@ if __name__=='__main__':
     demo_image = './ocr_demo/layout/010005.jpg'
     visual_dir = './visual_results'
 
+    demo_image = cv2.imread(demo_image)
     input_size = (960, 960)
 
     db_inference = DBInference(onnx_model, input_size)

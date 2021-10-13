@@ -13,6 +13,7 @@ import os
 import cv2
 import time
 import numpy as np
+import math
 import onnxruntime
 
 class CrnnInference():
@@ -38,8 +39,11 @@ class CrnnInference():
 
         scale = h / 32
         w_ = w / scale
-        w_ = int(w_/32)*32
-
+        w_ = math.ceil(w_/32)*32
+        if w_ > 1024:
+            print(w_)
+            w_ = 1024
+            print('long')
         img = cv2.resize(img, (w_, 32))
         img = img.astype('float32')
         img = img.transpose((2, 0, 1)) / 255
@@ -71,6 +75,73 @@ class CrnnInference():
             return None
 
     def batch_norm(self, image_lists, w):
+        # if  w <= 32:
+        #     w = 32
+        # elif w <= 64:
+        #     w =64
+        # elif w <= 64+32:
+        #     w =64+32
+        # elif w <= 128:
+        #     w = 128
+        # elif w <= 128+32:
+        #     w = 128+32
+        # elif w <= 192:
+        #     w = 192
+        # elif w <= 192+32:
+        #     w = 192+32
+        # elif w <= 256:
+        #     w = 256
+        # elif w <= 256+32:
+        #     w = 256+32
+        # elif w <= 320:
+        #     w = 320
+        # elif w <= 320+32:
+        #     w = 320+32
+        # elif w <= 384:
+        #     w = 384
+        # elif w <= 384+32:
+        #     w = 384+32
+        # elif w <= 448:
+        #     w = 448
+        # elif w <= 448+32:
+        #     w = 448+32
+        # elif w<= 512:
+        #     w = 512
+        # elif w<= 512+32:
+        #     w = 512+32
+        # elif w <= 576:
+        #     w = 576
+        # elif w <= 576+32:
+        #     w = 576+32
+        # elif w <= 640:
+        #     w = 640
+        # elif w <= 640+32:
+        #     w = 640+32
+        # elif w <= 704:
+        #     w = 704
+        # elif w <= 704+32:
+        #     w = 704+32
+        # elif w <= 768:
+        #     w = 768
+        # elif w <= 768+32:
+        #     w = 768+32
+        # elif w <= 832:
+        #     w = 832
+        # elif w <= 832+32:
+        #     w = 832+32
+        # elif w <= 896:
+        #     w = 896
+        # elif w <= 896+32:
+        #     w = 896+32
+        # elif w <= 960:
+        #     w = 960
+        # elif w <= 960+32:
+        #     w = 960+32
+        # else:
+        #     w = 1024
+        if w > 1024:
+            w = 1024
+
         norm_preprocess_lists = []
         for img in image_lists:
             mask_img = np.full((3, 32, w), fill_value=1.0)

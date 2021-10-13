@@ -20,7 +20,7 @@ model_path:
   angle_cls: '/home/shaoran/company_work/starsee/ocr_solution/models/angle_cls.onnx'
 
 visual_save:
-  visual_flag: True
+  visual_flag: False
   crop_flag: False
   visual_path: '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
 
