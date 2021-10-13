@@ -254,24 +254,30 @@ class DBInference():
         return dt_boxes
 
 if __name__=='__main__':
-    onnx_model = './model_onnx/det_inference_free_dim.onnx'
-    demo_image = './ocr_demo/layout/010005.jpg'
-    visual_dir = './visual_results'
+    onnx_model = '/home/shaoran/company_work/starsee/ocr_solution/models/det_inference_free_dim.onnx'
+    # demo_image = './ocr_demo/layout/010005.jpg'
+    # visual_dir = './visual_results'
 
-    input_size = (960, 960)
+    input_size = (1920, 1920)
 
-    db_inference = DBInference(onnx_model, input_size)
-    print('onnx model initial done')
-    for _ in range(20):
-        _ = db_inference.inference(demo_image, visual_save=None)
+    db_inference = DBInference(onnx_model, input_size, thresh=0.1, box_thresh=0.1)
+    # print('onnx model initial done')
+    # for _ in range(20):
+    #     _ = db_inference.inference(demo_image, visual_save=None)
         
+    # start = time.time()
+    # for _ in range(100):
+    #     res = db_inference.inference(demo_image, visual_save=None)
+    # stop = time.time()
+    # print('per image spend time: ', (stop-start)/100)
+    # fps = 100/(stop-start)
+    # print('fps: ', fps)
+
+    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/海研究院'
+    visual_path = '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
     start = time.time()
-    for _ in range(100):
-        res = db_inference.inference(demo_image, visual_save=None)
-    stop = time.time()
-    print('per image spend time: ', (stop-start)/100)
-    fps = 100/(stop-start)
-    print('fps: ', fps)
+    for path in os.listdir(root_dir):
+        image = cv2.imread(os.path.join(root_dir, path))
+        _ = db_inference.inference(image, visual_path, path)
     
-    res = db_inference.inference(demo_image, visual_save=visual_dir)
     # print(res)

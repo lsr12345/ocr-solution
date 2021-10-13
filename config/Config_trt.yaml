@@ -4,7 +4,7 @@ inference:
   use_layout: True
   use_formula: False
   use_table_struct: False
-  use_angle_cls: False
+  use_angle_cls: True
   use_pic_angle_cls: False
 
   input_size: (960,960)
@@ -20,7 +20,7 @@ model_path:
   angle_cls: '/home/shaoran/company_work/starsee/ocr_solution/models/angle_cls.trt'
 
 visual_save:
-  visual_flag: False
+  visual_flag: True
   crop_flag: False
   visual_path: '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
 

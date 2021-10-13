@@ -40,9 +40,9 @@ class CrnnInference():
         scale = h / 32
         w_ = w / scale
         w_ = math.ceil(w_/32)*32
-        if w_ > 1024:
+        if w_ > 1152:
             print(w_)
-            w_ = 1024
+            w_ = 1152
             print('long')
         img = cv2.resize(img, (w_, 32))
         img = img.astype('float32')
@@ -75,8 +75,8 @@ class CrnnInference():
             return None
 
     def batch_norm(self, image_lists, w):
-        if w > 1024:
-            w = 1024
+        if w > 1152:
+            w = 1152
 
         norm_preprocess_lists = []
         for img in image_lists:

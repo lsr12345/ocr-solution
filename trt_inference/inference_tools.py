@@ -21,13 +21,14 @@ class MyThread(threading.Thread):
 
     def run(self):
         start_time = time.time()
-        self.result = self.func(self.args)
+        self.result = self.func(*self.args)
         logger.info("版面分析请求耗时: %.3fs" % (time.time() - start_time))
 
     def get_result(self):
         try:
             return self.result  # 如果子线程不使用join方法，此处可能会报没有self.result的错误
-        except Exception:
+        except Exception as e:
+            print(e)
             return None
 
 def sorted_boxes(dt_boxes):

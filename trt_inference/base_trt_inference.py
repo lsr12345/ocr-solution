@@ -47,7 +47,7 @@ class TextSystem(object):
             self.text_detector = DBInference_trt(config['model_path']['det'], eval(config['inference']['input_size']))
             self.text_recognizer = CrnnInference_trt(config['model_path']['rec'], config['file_path']['crnn_chars'])
             if config['inference']['use_layout']:
-                self.loyout_detector = YoloxInference_trt(config['model_path']['layout'], eval(config['inference']['input_size']))
+                self.loyout_detector = YoloxInference_trt(config['model_path']['layout'], eval(config['inference']['input_size']), score_thr=0.75)
             if config['inference']['use_formula']:
                 raise NotImplementedError('Formula inference not supported.')
             if config['inference']['use_table_struct']:
@@ -90,12 +90,25 @@ class TextSystem(object):
             rot_n = self.config['angle_cls']['angel_label_list'].index(ac_res[0])
             img_angle = np.rot90(img_angle, -rot_n).copy()
             stop = time.time()
-            logger.info('角度检测耗时: {}'.format(stop-start))
+            logger.info('大角度检测耗时: {}'.format(stop-start))
             logger.info("angle : {}".format(ac_res[0]))
 
+            start = time.time()
+            img_angle, tiny_angle_0 = self.text_detector.inference_angle(img_angle, None, visual_name)
+            img_angle, tiny_angle_1 = self.text_detector.inference_angle(img_angle, self.visual_save_path, visual_name,  enhance=True)
+            angle = tiny_angle_0+tiny_angle_1
+            stop = time.time()
+            logger.info('小角度角度检测耗时: {}'.format(stop-start))
+            logger.info("Tiny angle : {}".format(angle))
+        else:
+            angle = 0
+
         # 版面分析
-        th = MyThread(self.loyout_detector.inference, args=(img_angle))
-        th.start()
+        # th = MyThread(self.loyout_detector.inference,args=([img_angle, self.config['visual_save']['visual_path'], 'layout_'+visual_name]))
+        # th.start()
+        start_time = time.time()
+        analysis = self.loyout_detector.inference(img_angle, self.config['visual_save']['visual_path'], 'layout_'+visual_name)
+        logger.info("版面分析请求耗时: %.3fs" % (time.time() - start_time))
 
         # adjust = contrast_brightness_image(img_angle, 1.5, 10)
         start = time.time()
@@ -176,10 +189,10 @@ class TextSystem(object):
                 filter_boxes.append(box)
                 filter_rec_res.append(rec_reuslt)
 
-        th.join()
-        analysis = th.get_result()
+        # th.join()
+        # analysis = th.get_result()
 
-        return filter_boxes, filter_rec_res, analysis, img_angle   # , angle_label_index
+        return filter_boxes, filter_rec_res, analysis, img_angle, angle   # , angle_label_index
 
     def warm(self):
         logger.info("Warming...... Please Wait")
@@ -195,31 +208,91 @@ class TextSystem(object):
             _ = self.loyout_detector.inference(warm_layout_data, visual_save=None)
         logger.info("Warm Done")
 
+def postprocess( boxes, rec_res, analysis, img, angle, type_list = ['text', 'title', 'formula', 'table', 'figure']):
+    start_time = time.time()
+    img = img.copy()
+    txts = [rec_res[i][0] for i in range(len(rec_res))]
+    scores = [rec_res[i][1] for i in range(len(rec_res))]
+    layouts = []
+    for box in analysis:
+        layouts.append({"layout": type_list[int(box[0])],
+                    "layout_location": [{"x": int(box[2][0]), "y": int(box[2][1])},
+                                        {"x": int(box[2][2]), "y": int(box[2][1])},
+                                        {"x": int(box[2][2]), "y": int(box[2][3])},
+                                        {"x": int(box[2][0]), "y": int(box[2][3])}],
+                    "layout_idx": []})
+
+    i_thresh = 0.5
+    r = []
+    for i in range(len(txts)):
+        box = boxes[i]
+        txt = txts[i]
+        scor = scores[i]
+
+        box_type = "unknown"
+        box_index = -1
+
+        for l, layout in enumerate(layouts):
+            # box:[top, left, bottom, right]
+            anbox = [layout["layout_location"][0]["y"],
+                     layout["layout_location"][0]["x"],
+                     layout["layout_location"][2]["y"],
+                     layout["layout_location"][2]["x"]]
+            dtbox = [box[0][1], box[0][0], box[3][1], box[1][0]]
+            ios_rate = ios(dtbox, anbox)
+            if ios_rate > i_thresh:
+                layout["layout_idx"].append(i)
+                box_index = l
+                box_type = layout["layout"]
+                break
+
+        single_data = dict()
+        single_data["words_type"] = box_type
+        single_data["block_index"] = box_index
+        single_data["score"] = float(scor)
+        single_data["words"] = {
+            "words_location": {
+                "top": int(box[0][1]),
+                "left": int(box[0][0]),
+                "width": int(box[1][0] - box[0][0]),
+                "height": int(box[3][1] - box[0][1]),
+            },
+            "word": txt,
+        }
+        r.append(single_data)
+
+    layouts_new = [lout for lout in layouts if not (
+                (lout['layout'] in ['text', 'title'] and len(lout['layout_idx']) == 0) or (
+                    lout['layout'] == 'table' and len(lout['layout_idx']) < 3))]
+
+    logger.info("后处理耗时: %.3fs" % (time.time() - start_time))
+
+    result = {
+        "results_num": len(boxes),
+        "img_direction": angle,
+        "layouts_num": len(layouts_new),
+        "results": r,
+        "layouts": layouts_new
+    }
+
+    return result
+
 if __name__=='__main__':
 
     text_sys = TextSystem(cfg)
-
-    # image = cv2.imread('/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/2.jpg')
-    # for _ in range(10):
-    #     _, _, _, _ = text_sys.run(image)
-    # start = time.time()
-    # for _ in range(50):
-    #     filter_boxes, filter_rec_res, analysis, img_angle = text_sys.run(image)
-    # stop = time.time()
-    # print('per image spend time: ', (stop-start)/50)
-    # fps = 50/(stop-start)
-    # print('fps: ', fps)
-    # print(filter_rec_res)
-
     text_sys.warm()
 
-    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/ocr_zp'
+    # root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/ocr_zp'
+    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/海研究院'
     start = time.time()
     for path in os.listdir(root_dir):
         image = cv2.imread(os.path.join(root_dir, path))
-        filter_boxes, filter_rec_res, analysis, img_angle = text_sys.run(image, visual_name=path)
+        filter_boxes, filter_rec_res, analysis, img_angle, angle = text_sys.run(image, visual_name=path)
     stop = time.time()
     print('per image spend time: ', (stop-start)/len(os.listdir(root_dir)))
     fps = len(os.listdir(root_dir))/(stop-start)
     print('fps: ', fps)
     # print(filter_rec_res)
+
+    # image = cv2.imread('/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/rotated_33_011563.jpg')
+    # filter_boxes, filter_rec_res, analysis, img_angle,angle = text_sys.run(image, visual_name='11.jpg')

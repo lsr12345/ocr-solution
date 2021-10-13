@@ -283,7 +283,8 @@ if __name__=='__main__':
     text_sys = TextSystem(cfg)
     text_sys.warm()
 
-    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/ocr_zp'
+    # root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/ocr_zp'
+    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/海研究院'
     start = time.time()
     for path in os.listdir(root_dir):
         image = cv2.imread(os.path.join(root_dir, path))
@@ -293,6 +294,8 @@ if __name__=='__main__':
     print('per image spend time: ', (stop-start)/len(os.listdir(root_dir)))
     fps = len(os.listdir(root_dir))/(stop-start)
     print('fps: ', fps)
-    # print(filter_rec_res)
+    # # print(filter_rec_res)
 
 
+    # image = cv2.imread('/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/rotated_33_011563.jpg')
+    # filter_boxes, filter_rec_res, analysis, img_angle,angle = text_sys.run(image, visual_name='11.jpg')

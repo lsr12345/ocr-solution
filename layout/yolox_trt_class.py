@@ -38,6 +38,9 @@ class HostDeviceMem(object):
 class YoloxInference_trt():
 
     def __init__(self, model_path, input_size=(960, 960), nms_thr=0.45, score_thr=0.1, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+
+        # self.cfx = cuda.Device(0).make_context()
+
         self.model_path = model_path
         self.input_size = input_size
         self.nms_thr = nms_thr
@@ -263,6 +266,7 @@ class YoloxInference_trt():
 
     def inference(self, image, visual_save=None, visual_name='visual_img_yolox.jpg'):
         # image = cv2.imread(img_path)
+        # self.cfx.push()
         img, ratio = self.preprocess(image)
         input_shape = (1, img.shape[0], img.shape[1], img.shape[2])
         img = np.expand_dims(img, axis=0)
@@ -276,7 +280,9 @@ class YoloxInference_trt():
                                         input_shape=input_shape)
         
         outputs_ = trt_outputs[0].reshape(1, -1, 10)
-        
+
+        # self.cfx.pop()
+
         res = self.postprocess(outputs_, ratio, origin_img=image, p6=False, visual=False if visual_save is None else True)
 
         if len(res) == 1:
@@ -377,20 +383,21 @@ _COLORS = np.array(
 
 
 if __name__=='__main__':
-    onnx_model = './trt_model/yolox_l_layout.trt'
-    demo_image = './ocr_demo/layout/010005.jpg'
-    visual_dir = './visual_results'
+    onnx_model = '/home/shaoran/company_work/starsee/ocr_solution/models/yolox_l_layout.trt'
+    demo_image = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/demo/3.jpg'
+    visual_dir = '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
 
+    demo_image = cv2.imread(demo_image)
     input_size = (960, 960)
 
     yolox_inference_trt = YoloxInference_trt(onnx_model, input_size, nms_thr=0.45,
-                                     score_thr=0.1, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+                                     score_thr=0.75, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     print('trt model initial done')
-    for _ in range(20):
-        _ = yolox_inference_trt.inference(demo_image, visual_save=None)
+    for _ in range(1):
+        _ = yolox_inference_trt.inference(demo_image, visual_save=visual_dir)
     start = time.time()
-    for _ in range(100):
-        res = yolox_inference_trt.inference(demo_image, visual_save=None)
+    for _ in range(1):
+        res = yolox_inference_trt.inference(demo_image, visual_save=visual_dir)
     stop = time.time()
     print('per image spend time: ', (stop-start)/100)
     print(res)

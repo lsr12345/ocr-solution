@@ -38,7 +38,7 @@ class HostDeviceMem(object):
 class CrnnInference_trt():
 
     def __init__(self, model_path, char_path):
-        
+        # self.cfx = cuda.Device(0).make_context()
         self.model_path = model_path
         self.char_path = char_path
         with open(char_path, 'r', encoding='UTF-8') as f:
@@ -136,6 +136,7 @@ class CrnnInference_trt():
         return res
 
     def inference(self, image, beamserach=False):
+        # self.cfx.push()
         img = self.preprocess(image)
         input_shape = (1, img.shape[0], img.shape[1], img.shape[2])
         img = np.expand_dims(img, axis=0)
@@ -149,6 +150,7 @@ class CrnnInference_trt():
                                         input_shape=input_shape)
         
         output = trt_outputs[0].reshape((-1, 6625))
+        # self.cfx.pop()
         res_ids = np.argmax(output[:input_shape[-1]//4], axis=-1) 
 
         if not beamserach:
@@ -167,6 +169,7 @@ class CrnnInference_trt():
         return norm_preprocess_lists
 
     def inference_batch(self, image_lists, beamserach=False):
+        # self.cfx.push()
         max_w = 0
         preprocess_lists = []
 
@@ -186,7 +189,7 @@ class CrnnInference_trt():
                                         outputs=self.outputs,
                                         stream=self.stream,
                                         input_shape=input_shape)
-        
+        # self.cfx.pop()
         size_ = max_w//4*6625
         outputs_ = [trt_outputs[0][size_*i:size_*(i+1)].reshape(1, -1, 6625) for i in range(img_batch.shape[0])]
         

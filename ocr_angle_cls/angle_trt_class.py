@@ -38,7 +38,7 @@ class HostDeviceMem(object):
 class AngleClsInference_trt():
 
     def __init__(self, model_path, input_size=(720, 720), angle_thresh=0.9, angel_label_list=['0', '90', '180', '270']):
-        
+        # self.cfx = cuda.Device(0).make_context()
         self.model_path = model_path
         self.input_size = input_size
         self.angel_label_list = angel_label_list
@@ -129,6 +129,7 @@ class AngleClsInference_trt():
         return label, score
 
     def inference(self, image):
+        # self.cfx.push()
         img = self.AnglePreprocess(image)
         input_shape = (1, img.shape[0], img.shape[1], img.shape[2])
         img = np.expand_dims(img, axis=0)
@@ -140,7 +141,7 @@ class AngleClsInference_trt():
                                         outputs=self.outputs,
                                         stream=self.stream,
                                         input_shape=input_shape)
-        
+        # self.cfx.pop()
         output = trt_outputs[0].reshape((4))
         output_numpy = np.array(output)
         label, score = self.AnglePostprocess(output_numpy)

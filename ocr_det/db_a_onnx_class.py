@@ -447,7 +447,7 @@ class DBInference():
             #     if not os.path.exists(visual_save):
             #         os.makedirs(visual_save)
             #     self.draw_det_res(dt_boxes, visual_save, image, visual_name)
-            return image
+            return image, 0
         
         angles_ = np.sort(angles_)
         angle_ = np.median(angles_)
@@ -477,7 +477,7 @@ class DBInference():
         
         if len(dt_boxes) < 1:
             print('Dets ob nums == 0')
-            return image
+            return image, 0
 
         if visual_save is not None:
             if not os.path.exists(visual_save):
