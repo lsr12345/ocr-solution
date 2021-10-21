@@ -29,6 +29,6 @@ crnn:
   beamserach: False
 
 angle_cls:
-  inference_batch: 2
+  inference_batch: 1
   input_size: (720,720)
   angel_label_list: ['0', '90', '180', '270']

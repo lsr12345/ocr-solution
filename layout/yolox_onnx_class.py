@@ -296,15 +296,17 @@ _COLORS = np.array(
 
 
 if __name__=='__main__':
-    onnx_model = './model_onnx/yolox_l_layout.onnx'
-    demo_image = './ocr_demo/layout/010005.jpg'
-    visual_dir = './visual_results'
+    onnx_model = '/home/shaoran/company_work/starsee/ocr_solution/models/yolox_l_layout.onnx'
+    root_dir = '/home/shaoran/company_work/starsee/ocr_solution/onnx_inference/海研究院'
+    visual_dir = '/home/shaoran/company_work/starsee/ocr_solution/visual_results'
 
     input_size = (960, 960)
 
     yolox_inference = YoloxInference(onnx_model, input_size, nms_thr=0.45,
-                                     score_thr=0.1, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+                                     score_thr=0.5, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     print('onnx model initial done')
+    
+    '''
     for _ in range(20):
         _ = yolox_inference.inference(demo_image, visual_save=None)
     start = time.time()
@@ -315,3 +317,10 @@ if __name__=='__main__':
     fps = 100/(stop-start)
     print('fps: ', fps)
     print(res)
+    '''
+    
+    
+    start = time.time()
+    for path in os.listdir(root_dir):
+        image = cv2.imread(os.path.join(root_dir, path))
+        _ = yolox_inference.inference(image, visual_dir, 'layout_'+path)
